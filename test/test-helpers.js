@@ -1,6 +1,7 @@
+const bcrypt = require('bcryptjs')
+
 function makeUsersArray() {
-  return [
-    {
+  return [{
       id: 1,
       user_name: 'test-user-1',
       full_name: 'Test user 1',
@@ -36,8 +37,7 @@ function makeUsersArray() {
 }
 
 function makeThingsArray(users) {
-  return [
-    {
+  return [{
       id: 1,
       title: 'First test thing!',
       image: 'http://placehold.it/500x500',
@@ -73,8 +73,7 @@ function makeThingsArray(users) {
 }
 
 function makeReviewsArray(users, things) {
-  return [
-    {
+  return [{
       id: 1,
       rating: 2,
       text: 'First test review!',
@@ -133,7 +132,7 @@ function makeReviewsArray(users, things) {
   ];
 }
 
-function makeExpectedThing(users, thing, reviews=[]) {
+function makeExpectedThing(users, thing, reviews = []) {
   const user = users
     .find(user => user.id === thing.user_id)
 
@@ -162,7 +161,7 @@ function makeExpectedThing(users, thing, reviews=[]) {
 }
 
 function calculateAverageReviewRating(reviews) {
-  if(!reviews.length) return 0
+  if (!reviews.length) return 0
 
   const sum = reviews
     .map(review => review.rating)
@@ -217,7 +216,11 @@ function makeThingsFixtures() {
   const testUsers = makeUsersArray()
   const testThings = makeThingsArray(testUsers)
   const testReviews = makeReviewsArray(testUsers, testThings)
-  return { testUsers, testThings, testReviews }
+  return {
+    testUsers,
+    testThings,
+    testReviews
+  }
 }
 
 function cleanTables(db) {
@@ -230,19 +233,34 @@ function cleanTables(db) {
   )
 }
 
-function seedThingsTables(db, users, things, reviews=[]) {
-  return db
-    .into('thingful_users')
-    .insert(users)
-    .then(() =>
-      db
-        .into('thingful_things')
-        .insert(things)
-    )
-    .then(() =>
-      reviews.length && db.into('thingful_reviews').insert(reviews)
-    )
-}
+// NEW TEST
+// function seedUsers(db, users) {
+//   const preppedUsers = users.map(user => ({
+//     ...user,
+//     password: bcrypt.hashSync(user.password, 1)
+//   }))
+//   return db.into('thingful_users').insert(preppedUsers)
+//     .then(() =>
+//       // update the auto sequence to stay in sync
+//       db.raw(
+//         `SELECT setval('thingful_users_id_seq', ?)`,
+//         [users[users.length - 1].id],
+//       )
+//     )
+// }
+
+// function seedThingsTables(db, users, things, reviews = []) {
+//   return db.transaction(async trx => {
+//     await seedUsers(trx, users)
+//     await trx.into('thingful_things').insert(things)
+//     await trx.raw(
+//       `SELECT setval('thingful_things_id_seq', ?)`,
+//       [things[things.length - 1].id],
+//     )
+//   })
+// }
+
+/////////
 
 function seedMaliciousThing(db, user, thing) {
   return db
@@ -250,8 +268,8 @@ function seedMaliciousThing(db, user, thing) {
     .insert([user])
     .then(() =>
       db
-        .into('thingful_things')
-        .insert([thing])
+      .into('thingful_things')
+      .insert([thing])
     )
 }
 
@@ -267,4 +285,6 @@ module.exports = {
   cleanTables,
   seedThingsTables,
   seedMaliciousThing,
+  seedUsers,
+  seedThingsTables
 }
