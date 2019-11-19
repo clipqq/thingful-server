@@ -1,4 +1,15 @@
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+
+function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+  const token = jwt.sign({
+    user_id: user.id
+  }, secret, {
+    subject: user.user_name,
+    algorithm: 'HS256',
+  })
+  return `Bearer ${token}`
+}
 
 function makeUsersArray() {
   return [{
@@ -234,31 +245,31 @@ function cleanTables(db) {
 }
 
 // NEW TEST
-// function seedUsers(db, users) {
-//   const preppedUsers = users.map(user => ({
-//     ...user,
-//     password: bcrypt.hashSync(user.password, 1)
-//   }))
-//   return db.into('thingful_users').insert(preppedUsers)
-//     .then(() =>
-//       // update the auto sequence to stay in sync
-//       db.raw(
-//         `SELECT setval('thingful_users_id_seq', ?)`,
-//         [users[users.length - 1].id],
-//       )
-//     )
-// }
+function seedUsers(db, users) {
+  const preppedUsers = users.map(user => ({
+    ...user,
+    password: bcrypt.hashSync(user.password, 1)
+  }))
+  return db.into('thingful_users').insert(preppedUsers)
+    .then(() =>
+      // update the auto sequence to stay in sync
+      db.raw(
+        `SELECT setval('thingful_users_id_seq', ?)`,
+        [users[users.length - 1].id],
+      )
+    )
+}
 
-// function seedThingsTables(db, users, things, reviews = []) {
-//   return db.transaction(async trx => {
-//     await seedUsers(trx, users)
-//     await trx.into('thingful_things').insert(things)
-//     await trx.raw(
-//       `SELECT setval('thingful_things_id_seq', ?)`,
-//       [things[things.length - 1].id],
-//     )
-//   })
-// }
+function seedThingsTables(db, users, things, reviews = []) {
+  return db.transaction(async trx => {
+    await seedUsers(trx, users)
+    await trx.into('thingful_things').insert(things)
+    await trx.raw(
+      `SELECT setval('thingful_things_id_seq', ?)`,
+      [things[things.length - 1].id],
+    )
+  })
+}
 
 /////////
 
@@ -283,8 +294,8 @@ module.exports = {
 
   makeThingsFixtures,
   cleanTables,
-  seedThingsTables,
-  seedMaliciousThing,
   seedUsers,
-  seedThingsTables
+  seedThingsTables,
+  makeAuthHeader,
+  seedMaliciousThing
 }

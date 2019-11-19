@@ -2,7 +2,7 @@ const knex = require('knex')
 const app = require('../src/app')
 const helpers = require('./test-helpers')
 
-describe.only('Reviews Endpoints', function() {
+describe('Reviews Endpoints', function() {
   let db
 
   const {
@@ -39,22 +39,22 @@ describe.only('Reviews Endpoints', function() {
       const testUser = testUsers[0]
       const newReview = {
         text: 'Test new review',
+        rating: 3,
         thing_id: testThing.id,
         user_id: testUser.id,
-        rating: 2
       }
       return supertest(app)
         .post('/api/reviews')
-        .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
         .send(newReview)
         .expect(201)
         .expect(res => {
           expect(res.body).to.have.property('id')
+          expect(res.body.rating).to.eql(newReview.rating)
           expect(res.body.text).to.eql(newReview.text)
           expect(res.body.thing_id).to.eql(newReview.thing_id)
           expect(res.body.user.id).to.eql(testUser.id)
           expect(res.headers.location).to.eql(`/api/reviews/${res.body.id}`)
-          const expectedDate = new Date().toLocaleString('en', { timeZone: 'UTC' })
+          const expectedDate = new Date().toLocaleString()
           const actualDate = new Date(res.body.date_created).toLocaleString()
           expect(actualDate).to.eql(expectedDate)
         })
@@ -66,23 +66,24 @@ describe.only('Reviews Endpoints', function() {
             .first()
             .then(row => {
               expect(row.text).to.eql(newReview.text)
+              expect(row.rating).to.eql(newReview.rating)
               expect(row.thing_id).to.eql(newReview.thing_id)
               expect(row.user_id).to.eql(newReview.user_id)
-              const expectedDate = new Date().toLocaleString('en', { timeZone: 'UTC' })
+              const expectedDate = new Date().toLocaleString()
               const actualDate = new Date(row.date_created).toLocaleString()
               expect(actualDate).to.eql(expectedDate)
             })
         )
     })
 
-    const requiredFields = ['text', 'user_id', 'thing_id']
+    const requiredFields = ['text', 'rating', 'user_id', 'thing_id']
 
     requiredFields.forEach(field => {
       const testThing = testThings[0]
       const testUser = testUsers[0]
       const newReview = {
-        rating: 2,
         text: 'Test new review',
+        rating: 3,
         user_id: testUser.id,
         thing_id: testThing.id,
       }
@@ -92,7 +93,6 @@ describe.only('Reviews Endpoints', function() {
 
         return supertest(app)
           .post('/api/reviews')
-          .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .send(newReview)
           .expect(400, {
             error: `Missing '${field}' in request body`,
