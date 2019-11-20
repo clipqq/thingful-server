@@ -75,7 +75,7 @@ describe.only('Reviews Endpoints', function() {
         )
     })
 
-    const requiredFields = ['text', 'user_id', 'thing_id']
+    const requiredFields = ['text', 'rating', 'thing_id']
 
     requiredFields.forEach(field => {
       const testThing = testThings[0]
@@ -83,7 +83,6 @@ describe.only('Reviews Endpoints', function() {
       const newReview = {
         rating: 2,
         text: 'Test new review',
-        user_id: testUser.id,
         thing_id: testThing.id,
       }
 
